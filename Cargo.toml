@@ -1,0 +1,9 @@
+[package]
+name = "relicwizard"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+xcap = "0.3.1"
+toml = "0.8.20"
+serde = { version = "1.0.217", features = ["derive"] }

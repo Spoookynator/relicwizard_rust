@@ -1,4 +1,4 @@
-use std::io::{stderr, Write};
+use std::io::Write;
 
 mod menu;
 mod screenshot;
