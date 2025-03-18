@@ -1,8 +1,7 @@
-use std::fs::File;
 use std::path::Path;
-use std::io::{Error, ErrorKind, Write};
-use crate::config;
-use crate::config::ScanSettings;
+use std::io::{Error, ErrorKind};
+use crate::config::write_default_config;
+
 
 fn dir_exists(path: &Path) -> Result<bool, Error> {
     let exists = std::fs::exists(path);
@@ -18,18 +17,16 @@ fn file_exists(path: &Path) -> Result<bool, Error> {
     path.try_exists()
 }
 
-pub fn check_filesystem_integrity() -> Result<bool, Error> {
+fn check_filesystem_integrity() -> Result<bool, Error> {
+
     let mut did_changes = false;
 
     let dirs: Vec<&Path> = vec![
         Path::new("./user/"),
-        Path::new("./tmp/"),
-
+        Path::new("./res/"),
     ];
 
-
-    let config_path = Path::new("./user/config.toml");
-
+    println!("[info] checking directory...");
     for dir in dirs {
         let res = dir_exists(dir);
 
@@ -38,41 +35,47 @@ pub fn check_filesystem_integrity() -> Result<bool, Error> {
         }
 
         if !res.ok().unwrap() {
+            println!("[info] created dir {}", dir.display());
             std::fs::create_dir(dir)?;
             did_changes = true;
         }
     }
 
+    let config_path = Path::new("./user/config.toml");
+
+    println!("[info] checking config...");
     if !file_exists(config_path)? {
-        write_default_config(config_path);
+        let res = write_default_config(config_path);
+
+        if res.is_some() {
+            #[allow(clippy::unnecessary_unwrap)]
+            return Err(res.unwrap());
+        }
+
+        println!("[info] generated {}", config_path.display());
+        did_changes = true;
+
     }
 
 
     Ok(did_changes)
 }
 
-fn write_default_config(path: &Path) -> Option<Error> {
+pub fn init() {
+    println!("[info] Initializing...");
 
-    let conf = config::Config {
-        scan_settings: ScanSettings {
-            show_console: true,
-            show_debug: false
-        }
-    };
+    // init config file - doesn't check integrity tho
+    println!("[info] Filesystem integrity");
+    let res = check_filesystem_integrity();
 
-    let content = toml::to_string_pretty(&conf);
-
-
-    let file = File::create(path);
-
-    if file.is_ok() && content.is_ok() {
-        let res = file.unwrap().write_all(content.unwrap().as_bytes());
-
-        if res.is_err() {
-            return Some(Error::from(ErrorKind::DirectoryNotEmpty));
-        }
+    if res.is_err() {
+        println!("[fatal] {}", res.err().unwrap());
+        std::process::exit(1);
     }
-    None
+
+    if !res.unwrap() {
+        println!("[info] No changes were made");
+    }
 }
 
 #[cfg(test)]
@@ -103,7 +106,6 @@ mod tests {
         let res = check_filesystem_integrity();
 
         assert!(res.is_ok());
-
         assert!(res.ok().unwrap());
     }
 }

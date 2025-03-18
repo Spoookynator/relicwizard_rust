@@ -1,7 +1,6 @@
 use xcap::image::RgbaImage;
 use xcap::Window;
 use crate::error::RelicWizardError;
-
 pub fn get_game_screenshot(window_name: String) -> Result<RgbaImage, RelicWizardError> {
     let game_window = get_game_window(window_name);
 

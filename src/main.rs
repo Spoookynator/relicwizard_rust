@@ -1,16 +1,12 @@
-use std::io::Write;
-
 mod menu;
 mod screenshot;
 mod error;
 mod init;
 mod config;
+mod relic;
 
 fn main() {
     // menus::menu_main()
-    let res = init::check_filesystem_integrity();
+    init::init();
     
-    if res.is_err() {
-        println!("{:?}", res.err().unwrap());
-    }
 }
